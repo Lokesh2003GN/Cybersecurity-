@@ -29,6 +29,21 @@ def submit():
 
     return jsonify({"message": "Data saved successfully!"})
 
+@app.route('/show-data')
+def show_data():
+    # Fetch all users from the database
+    print("redirected")
+    conn = sqlite3.connect('data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
+    conn.close()
+
+    # Clear the session flag after the redirect to ensure the user can't come back
+    session.pop('redirected', None)
+
+    # Render the HTML page (you need to have the 'show_data.html' template)
+    return render_template('show_data.html',users=users)
 @app.route('/get-users', methods=['GET'])
 def get_users():
     conn = sqlite3.connect('data.db')

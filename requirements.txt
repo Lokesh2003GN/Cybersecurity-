@@ -1,0 +1,10 @@
+Flask==3.0.2
+<<<<<<< HEAD
+Django==4.2.7
+requests==2.31.0
+python-dotenv==1.0.0
+=======
+Django==4.2.7   # Only keep this if you're actually using Django
+requests==2.31.0  # For making HTTP requests (optional)
+python-dotenv==1.0.0  # For environment variables (optional)
+>>>>>>> f6e987e (new changes)

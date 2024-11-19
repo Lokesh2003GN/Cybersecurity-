@@ -41,8 +41,4 @@ def get_users():
 
 if __name__ == '__main__':
     init_db()
-<<<<<<< HEAD
     app.run(debug=True)
-=======
-    app.run(debug=True)
->>>>>>> f6e987e (new changes)

